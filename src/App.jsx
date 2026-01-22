@@ -140,13 +140,26 @@ const CreatableSelect = ({ label, value, options, onChange, placeholder, theme, 
   const containerRef = useRef(null);
   useEffect(() => { const h = (e) => { if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   const t = UI_LABELS[lang] || UI_LABELS.en;
-  const filtered = options.filter(o => o.toLowerCase().includes(value.toLowerCase()));
+  // 这里的 filtered 逻辑保持不变，用于下拉列表筛选
+  const filtered = options.filter(o => {
+    // 同时匹配英文原名和翻译后的中文名，提升搜索体验
+    const label = getOptionLabel(o, lang);
+    return o.toLowerCase().includes(value.toLowerCase()) || label.toLowerCase().includes(value.toLowerCase());
+  });
+
   return (
     <div className="flex flex-col gap-2" ref={containerRef}>
       <label className={`text-[10px] font-bold uppercase tracking-widest pl-1 ${theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'}`}>{label}</label>
       <div className="relative">
         <div className={`flex items-center w-full rounded-lg border transition-all shadow-sm ${theme === 'dark' ? 'bg-[#1c1c1e] border-white/10 focus-within:border-blue-500/50' : 'bg-white border-gray-200 focus-within:border-blue-500'}`}>
-          <input value={value} onChange={e => {onChange(e.target.value); setIsOpen(true);}} onFocus={() => setIsOpen(true)} placeholder={placeholder} className={`w-full bg-transparent text-[13px] font-medium px-3 py-2.5 outline-none ${theme === 'dark' ? 'text-neutral-200' : 'text-gray-900'}`} />
+          {/* 🔥 修复重点：value={getOptionLabel(value, lang)} 让输入框显示翻译后的文字 */}
+          <input 
+            value={getOptionLabel(value, lang)} 
+            onChange={e => {onChange(e.target.value); setIsOpen(true);}} 
+            onFocus={() => setIsOpen(true)} 
+            placeholder={placeholder} 
+            className={`w-full bg-transparent text-[13px] font-medium px-3 py-2.5 outline-none ${theme === 'dark' ? 'text-neutral-200' : 'text-gray-900'}`} 
+          />
           <button onClick={() => setIsOpen(!isOpen)} className={`px-3 py-2.5 transition-colors border-l ${theme === 'dark' ? 'text-neutral-500 hover:text-white border-white/5' : 'text-gray-400 hover:text-gray-900 border-gray-200'}`}><ChevronDown className="w-4 h-4" /></button>
         </div>
         {isOpen && <div className={`absolute z-50 w-full mt-1 border rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar p-1 ${theme === 'dark' ? 'bg-[#1c1c1e] border-white/10' : 'bg-white border-gray-200'}`}>
