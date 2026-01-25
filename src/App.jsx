@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Copy, RefreshCw, Terminal, ChevronDown, X, Sparkles, Settings, Zap, Brain, Sun, Moon, Dice5, Image as ImageIcon, Check } from 'lucide-react';
 
-// --- v3.7.3 Fixed: Added missing 'visualTags' label ---
+// --- v3.8.0 Update: Added Camera Angle & Fixed Translations ---
 const UI_LABELS = {
   en: {
     appTitle: "Director's Mind",
-    version: "v3.7.3",
+    version: "v3.8.0",
     inspireMe: "Inspire Me",
     sections: { narrative: "NARRATIVE & SUBJECT", world: "WORLD & ATMOSPHERE", style: "STYLE & MOOD", color: "COLOR GRADING", tech: "CINEMATOGRAPHY SPECS" },
     tabs: { filter: "FILTER", rosco: "ROSCO", picker: "PICKER" },
@@ -21,12 +21,12 @@ const UI_LABELS = {
     save: "Save",
     processing: "Processing...",
     generate: "Generate Concept",
-    visualTags: "Visual Tags", // 👈 Fixed here
-    labels: { mediaType: "Media Type", genre: "Genre / Style", environment: "Environment", setDetail: "Set Detail", weather: "Weather / Atmosphere", shotType: "Shot Type", frameSize: "Frame Size", composition: "Composition", lightingStyle: "Lighting Style", lightSource: "Light Source", timeOfDay: "Time of Day", format: "Shooting Format", camera: "Camera System", lens: "Lens Characteristics", aperture: "T-Stop / DoF", aspectRatio: "Aspect Ratio", gender: "Gender", age: "Age", ethnicity: "Ethnicity" }
+    visualTags: "Visual Tags",
+    labels: { mediaType: "Media Type", genre: "Genre / Style", environment: "Environment", setDetail: "Set Detail", weather: "Weather / Atmosphere", shotType: "Shot Type", cameraAngle: "Camera Angle", frameSize: "Frame Size", composition: "Composition", lightingStyle: "Lighting Style", lightSource: "Light Source", timeOfDay: "Time of Day", format: "Shooting Format", camera: "Camera System", lens: "Lens Characteristics", aperture: "T-Stop / DoF", aspectRatio: "Aspect Ratio", gender: "Gender", age: "Age", ethnicity: "Ethnicity" }
   },
   cn: {
     appTitle: "导演思维",
-    version: "v3.7.3",
+    version: "v3.8.0",
     inspireMe: "随机灵感",
     sections: { narrative: "叙事基础", world: "时空环境", style: "风格与影调", color: "色彩风格", tech: "摄影技术参数" },
     tabs: { filter: "滤镜", rosco: "Rosco 色纸", picker: "拾色器" },
@@ -42,12 +42,13 @@ const UI_LABELS = {
     save: "保存配置",
     processing: "生成中...",
     generate: "生成概念图",
-    visualTags: "画面标签", // 👈 Fixed here
-    labels: { mediaType: "媒体类型", genre: "流派 / 风格", environment: "环境类型", setDetail: "场景细节", weather: "天气 / 氛围", shotType: "运镜类型", frameSize: "景别", composition: "构图", lightingStyle: "光影质感", lightSource: "光源类型", timeOfDay: "时间", format: "拍摄介质", camera: "摄影机系统", lens: "镜头参数", aperture: "T值 / 景深", aspectRatio: "画幅比例", gender: "性别", age: "年龄段", ethnicity: "种族" }
+    visualTags: "画面标签",
+    labels: { mediaType: "媒体类型", genre: "流派 / 风格", environment: "环境类型", setDetail: "场景细节", weather: "天气 / 氛围", shotType: "运镜动作", cameraAngle: "拍摄角度", frameSize: "景别", composition: "构图", lightingStyle: "光影质感", lightSource: "光源类型", timeOfDay: "时间", format: "拍摄介质", camera: "摄影机系统", lens: "镜头参数", aperture: "T值 / 景深", aspectRatio: "画幅比例", gender: "性别", age: "年龄段", ethnicity: "种族" }
   }
 };
 
 const ETHNICITY_MAP = { "Asian": "亚裔", "Black / African Descent": "非裔 / 黑人", "Black": "黑人", "White": "白人", "Latinx": "拉丁裔", "Middle Eastern": "中东裔", "Indigenous": "原住民", "Mixed-race": "混血", "South-East Asian": "东南亚裔", "South Asian": "南亚裔" };
+
 const GENERAL_MAP = {
   "Warm": "暖调", "Cool": "冷调", "Mixed": "混合色温", "Saturated": "高饱和", "Desaturated": "低饱和", "High Key": "高调", "Low Key": "低调", "Black & White": "黑白", "Teal & Orange": "青橙色调", "Red": "红色系", "Orange": "橙色系", "Yellow": "黄色系", "Green": "绿色系", "Cyan": "青色系", "Blue": "蓝色系", "Purple": "紫色系", "Magenta": "洋红系", "Pink": "粉色系", "White": "白色系", "Black": "黑色系", "Sepia": "怀旧褐色",
   "R02 - Bastard Amber": "R02 - 琥珀色", "R08 - Pale Gold": "R08 - 浅金色", "R12 - Straw": "R12 - 麦黄色", "R27 - Medium Red": "R27 - 中红色", "R34 - Flesh Pink": "R34 - 肤粉色", "R44 - Middle Rose": "R44 - 玫瑰红", "R60 - No Color Blue": "R60 - 无色蓝", "R80 - Primary Blue": "R80 - 原蓝色", "R83 - Medium Blue": "R83 - 中蓝色", "R89 - Moss Green": "R89 - 苔藓绿", "R90 - Dark Yellow Green": "R90 - 暗黄绿", "CTB - Full Blue": "CTB - 全蓝温", "CTO - Full Orange": "CTO - 全橙温", "R3202 - Full Blue": "R3202 - 全蓝", "R3204 - Half Blue": "R3204 - 半蓝", "R382 - Congo Blue": "R382 - 刚果蓝", "R321 - Golden Amber": "R321 - 金琥珀", "R3208 - Quarter Blue": "R3208 - 四分之一蓝",
@@ -57,7 +58,8 @@ const GENERAL_MAP = {
   "Action": "动作", "Adventure": "冒险", "Animation": "动画", "Biopic": "传记", "Comedy": "喜剧", "Crime": "犯罪", "Drama": "剧情", "Fantasy": "奇幻", "History": "历史", "Horror": "恐怖", "Mystery": "悬疑", "Romance": "爱情", "Sci-Fi": "科幻", "Thriller": "惊悚", "War": "战争", "Western": "西部", "Cyberpunk": "赛博朋克", "Automotive": "汽车广告", "Fashion / Apparel": "时尚服饰", "Beauty & Cosmetics": "美妆", "Food / Tabletop": "美食/静物", "Performance (Band/Artist)": "乐队表演", "Narrative (Story)": "叙事类", "Biographical": "人物传记", "True Crime": "真实犯罪", "Nature / Wildlife": "自然生态", "Noir": "黑色电影", "Luxury": "奢侈品", "Tech": "科技产品", "Abstract": "抽象艺术", "Lifestyle": "生活方式", "Corporate": "企业宣传", "PSA": "公益广告", "VFX Heavy": "重特效",
   "Sunny": "晴朗", "Overcast": "阴天", "Rainy": "雨天", "Stormy": "暴风雨", "Foggy": "雾天", "Hazy": "朦胧/雾霾", "Snowy": "雪天", "Windy": "大风", "Clear Skies": "万里无云", "Drizzle": "毛毛雨", "Thunderstorm": "雷暴", "Sandstorm": "沙尘暴",
   "Apartment": "公寓", "Bedroom": "卧室", "Living Room": "客厅", "Kitchen": "厨房", "Bathroom": "浴室", "Office": "办公室", "Bar / Pub / Club": "酒吧/俱乐部", "Restaurant / Diner": "餐厅/快餐店", "Hospital": "医院", "Classroom / School": "教室/学校", "Car / Vehicle": "车内/交通工具", "Street / Alley": "街道/巷子", "Forest / Woods": "森林/树林", "Beach / Ocean": "海滩/海洋", "Mountain": "山脉", "Rooftop": "屋顶/天台", "Warehouse": "仓库/废墟", "Spaceship / Sci-Fi": "太空飞船/科幻", "Void / Abstract": "虚空/抽象背景", "Subway / Train": "地铁/火车", "Church": "教堂", "Street": "街道", "Forest": "森林", "Spaceship": "太空飞船", "Void": "虚空",
-  "Establishing shot": "交代镜头", "Clean single": "单人镜头", "Over the shoulder": "过肩镜头", "Low angle": "低角度/仰拍", "High angle": "高角度/俯拍", "Aerial / Drone": "航拍", "Dutch angle": "德式倾斜", "Insert": "特写插入", "POV": "主观视角", "Two Shot": "双人镜头", "Tracking Shot": "跟拍", "Handheld": "手持摄影", "Aerial": "航拍",
+  "Static Shot": "固定镜头", "Panning": "摇镜头 (Pan)", "Tilt": "俯仰镜头 (Tilt)", "Dolly In": "推镜头 (Dolly In)", "Dolly Out": "拉镜头 (Dolly Out)", "Tracking Shot": "跟拍 (Track)", "Crab Shot": "横移 (Crab)", "Arc Shot": "弧形运动 (Arc)", "Handheld": "手持摄影", "Steadicam": "斯坦尼康", "Gimbal Flow": "稳定器跟随", "Shakey Cam": "剧烈晃动", "Whiplash": "极速甩镜",
+  "Eye Level (Neutral)": "平视 (中性)", "Low Angle (Heroic)": "仰拍 (英雄视角)", "High Angle (Vulnerability)": "俯拍 (弱势视角)", "Overhead / God's Eye": "上帝视角 / 顶拍", "Worm's Eye View": "虫视 / 极低角度", "Dutch Angle / Canted": "德式倾斜 / 不安感", "Over the Shoulder": "过肩镜头", "POV (Point of View)": "主观视角 (POV)", "Ground Level": "地面视角", "Knee Level": "膝盖视角", "Bird's Eye View": "鸟瞰", "Drone / Aerial": "无人机 / 航拍", "Selfie Angle": "自拍视角",
   "Extreme Close Up": "极特写", "Close Up": "特写", "Medium Close Up": "中特写", "Medium Shot": "中景", "Cowboy Shot": "七分身/牛仔景", "Full Shot": "全景", "Wide Shot": "远景", "Extreme Wide": "大远景",
   "Center Framed": "居中构图", "Rule of Thirds": "三分法", "Symmetrical": "对称", "Negative Space": "留白", "Looking at Camera": "直视镜头", "Right heavy": "右侧重", "Left heavy": "左侧重", "Balanced": "平衡", "Leading Lines": "引导线", "Frame within a Frame": "框中框",
   "Soft light": "柔光", "Hard light": "硬光", "High contrast": "高反差", "Low contrast": "低反差", "Silhouette": "剪影", "Rim Light": "轮廓光", "Backlight": "逆光", "Chiaroscuro": "明暗对照法", "Volumetric": "体积光", "Rembrandt": "伦勃朗光",
@@ -91,7 +93,15 @@ const DATA_OPTIONS = {
   colorFilters: ["Warm", "Cool", "Mixed", "Saturated", "Desaturated", "High Key", "Low Key", "Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple", "Magenta", "Pink", "White", "Sepia", "Black & White", "Teal & Orange"],
   roscoColors: Object.keys(ROSCO_HEX_MAP),
   weather: ["Sunny", "Overcast", "Rainy", "Stormy", "Foggy", "Hazy", "Snowy", "Windy", "Clear Skies", "Drizzle", "Thunderstorm", "Sandstorm"],
-  shotType: ["Clean single", "Over the shoulder", "Establishing shot", "Low angle", "High angle", "Aerial / Drone", "Dutch angle", "Insert", "POV", "Two Shot", "Tracking Shot", "Handheld"],
+  // REVISED: Simplified Shot Type (Motion focused)
+  shotType: ["Static Shot", "Panning", "Tilt", "Dolly In", "Dolly Out", "Tracking Shot", "Crab Shot", "Arc Shot", "Handheld", "Steadicam", "Gimbal Flow", "Shakey Cam", "Whiplash"],
+  // NEW: Camera Angle (Position focused)
+  cameraAngle: [
+    "Eye Level (Neutral)", "Low Angle (Heroic)", "High Angle (Vulnerability)", 
+    "Overhead / God's Eye", "Worm's Eye View", "Dutch Angle / Canted", 
+    "Over the Shoulder", "POV (Point of View)", "Ground Level", 
+    "Knee Level", "Bird's Eye View", "Drone / Aerial", "Selfie Angle"
+  ],
   frameSize: ["Extreme Close Up", "Close Up", "Medium Close Up", "Medium Shot", "Cowboy Shot", "Full Shot", "Wide Shot", "Extreme Wide"],
   composition: ["Center Framed", "Rule of Thirds", "Symmetrical", "Negative Space", "Looking at Camera", "Right heavy", "Left heavy", "Balanced", "Leading Lines", "Frame within a Frame"],
   lighting: ["Soft light", "Hard light", "High contrast", "Low contrast", "Silhouette", "Rim Light", "Backlight", "Chiaroscuro", "Volumetric", "Rembrandt"],
@@ -140,9 +150,7 @@ const CreatableSelect = ({ label, value, options, onChange, placeholder, theme, 
   const containerRef = useRef(null);
   useEffect(() => { const h = (e) => { if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   const t = UI_LABELS[lang] || UI_LABELS.en;
-  // 这里的 filtered 逻辑保持不变，用于下拉列表筛选
   const filtered = options.filter(o => {
-    // 同时匹配英文原名和翻译后的中文名，提升搜索体验
     const label = getOptionLabel(o, lang);
     return o.toLowerCase().includes(value.toLowerCase()) || label.toLowerCase().includes(value.toLowerCase());
   });
@@ -152,7 +160,6 @@ const CreatableSelect = ({ label, value, options, onChange, placeholder, theme, 
       <label className={`text-[10px] font-bold uppercase tracking-widest pl-1 ${theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'}`}>{label}</label>
       <div className="relative">
         <div className={`flex items-center w-full rounded-lg border transition-all shadow-sm ${theme === 'dark' ? 'bg-[#1c1c1e] border-white/10 focus-within:border-blue-500/50' : 'bg-white border-gray-200 focus-within:border-blue-500'}`}>
-          {/* 🔥 修复重点：value={getOptionLabel(value, lang)} 让输入框显示翻译后的文字 */}
           <input 
             value={getOptionLabel(value, lang)} 
             onChange={e => {onChange(e.target.value); setIsOpen(true);}} 
@@ -245,7 +252,8 @@ export default function DirectorsMind() {
   const [lang, setLang] = useState("cn");
   const [apiKey, setApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
-  const [selections, setSelections] = useState({ mediaType: "Movie", format: "", genre: [], location: "", set: "", weather: "", shotType: "", frameSize: "", composition: "", lighting: "", lightingType: "", camera: "", lensSize: "", aspectRatio: "2.39:1 (Scope)", timeOfDay: "", aperture: "", gender: "", age: "", ethnicity: "", color: [] });
+  // Updated state to include cameraAngle
+  const [selections, setSelections] = useState({ mediaType: "Movie", format: "", genre: [], location: "", set: "", weather: "", shotType: "", cameraAngle: "", frameSize: "", composition: "", lighting: "", lightingType: "", camera: "", lensSize: "", aspectRatio: "2.39:1 (Scope)", timeOfDay: "", aperture: "", gender: "", age: "", ethnicity: "", color: [] });
   const [tags, setTags] = useState(["Cinematic", "High Detail"]);
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -255,14 +263,37 @@ export default function DirectorsMind() {
   const updateSelection = (k, v) => setSelections(p => ({...p, [k]: v, ...(k==='mediaType'?{genre:[]}:{})}));
   const randomize = () => {
     const r = (arr) => arr[Math.floor(Math.random() * arr.length)];
-    setSelections({ mediaType: "Movie", format: r(DATA_OPTIONS.format), genre: [r(DATA_OPTIONS.genre["Movie/TV"])], location: r(DATA_OPTIONS.location), set: r(DATA_OPTIONS.set), weather: r(DATA_OPTIONS.weather), shotType: r(DATA_OPTIONS.shotType), frameSize: r(DATA_OPTIONS.frameSize), composition: r(DATA_OPTIONS.composition), lighting: r(DATA_OPTIONS.lighting), lightingType: r(DATA_OPTIONS.lightingType), camera: r(DATA_OPTIONS.camera), lensSize: r(DATA_OPTIONS.lensSize), aperture: r(DATA_OPTIONS.aperture), aspectRatio: r(DATA_OPTIONS.aspectRatio), timeOfDay: r(DATA_OPTIONS.timeOfDay), gender: r(DATA_OPTIONS.character.gender), age: r(DATA_OPTIONS.character.age), ethnicity: r(DATA_OPTIONS.character.ethnicity), color: [r(DATA_OPTIONS.colorFilters), r(DATA_OPTIONS.colorFilters)] });
+    setSelections({ 
+      mediaType: "Movie", 
+      format: r(DATA_OPTIONS.format), 
+      genre: [r(DATA_OPTIONS.genre["Movie/TV"])], 
+      location: r(DATA_OPTIONS.location), 
+      set: r(DATA_OPTIONS.set), 
+      weather: r(DATA_OPTIONS.weather), 
+      shotType: r(DATA_OPTIONS.shotType), 
+      cameraAngle: r(DATA_OPTIONS.cameraAngle), // Added to randomizer
+      frameSize: r(DATA_OPTIONS.frameSize), 
+      composition: r(DATA_OPTIONS.composition), 
+      lighting: r(DATA_OPTIONS.lighting), 
+      lightingType: r(DATA_OPTIONS.lightingType), 
+      camera: r(DATA_OPTIONS.camera), 
+      lensSize: r(DATA_OPTIONS.lensSize), 
+      aperture: r(DATA_OPTIONS.aperture), 
+      aspectRatio: r(DATA_OPTIONS.aspectRatio), 
+      timeOfDay: r(DATA_OPTIONS.timeOfDay), 
+      gender: r(DATA_OPTIONS.character.gender), 
+      age: r(DATA_OPTIONS.character.age), 
+      ethnicity: r(DATA_OPTIONS.character.ethnicity), 
+      color: [r(DATA_OPTIONS.colorFilters), r(DATA_OPTIONS.colorFilters)] 
+    });
     setTags(["Cinematic", "Masterpiece"]);
   };
 
   useEffect(() => {
     const subject = [selections.age, selections.ethnicity, selections.gender].filter(Boolean).join(" ") || "subject";
     const apVal = selections.aperture ? selections.aperture.split(' - ')[0] : "";
-    const parts = [selections.shotType, `of a ${subject}`, selections.frameSize, selections.mediaType, Array.isArray(selections.genre)?selections.genre.join(", "):"", tags.join(", "), selections.location ? `in ${selections.location}` : "", selections.set, selections.weather, selections.timeOfDay, selections.lighting, selections.color.join(", ")].filter(Boolean);
+    // Added selections.cameraAngle to the parts array
+    const parts = [selections.shotType, selections.cameraAngle, `of a ${subject}`, selections.frameSize, selections.mediaType, Array.isArray(selections.genre)?selections.genre.join(", "):"", tags.join(", "), selections.location ? `in ${selections.location}` : "", selections.set, selections.weather, selections.timeOfDay, selections.lighting, selections.color.join(", ")].filter(Boolean);
     const tech = [selections.format, selections.camera, selections.lensSize, apVal, selections.aspectRatio, "8k"].filter(Boolean).join(", ");
     setPrompt(`/imagine prompt: ${parts.join(", ")}. --ar ${selections.aspectRatio?.split(':')[0] || "16:9"} --params ${tech}`);
   }, [selections, tags]);
@@ -326,7 +357,13 @@ export default function DirectorsMind() {
 
           <div className="p-5 flex flex-col gap-4 pb-20">
             <h3 className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{t.sections.tech}</h3>
-            <div className="grid grid-cols-2 gap-3"><CustomSelect label={t.labels.shotType} value={selections.shotType} options={DATA_OPTIONS.shotType} onChange={v => updateSelection('shotType', v)} theme={theme} lang={lang} /><CustomSelect label={t.labels.frameSize} value={selections.frameSize} options={DATA_OPTIONS.frameSize} onChange={v => updateSelection('frameSize', v)} theme={theme} lang={lang} /><div className="col-span-2"><CustomSelect label={t.labels.composition} value={selections.composition} options={DATA_OPTIONS.composition} onChange={v => updateSelection('composition', v)} theme={theme} lang={lang} /></div></div>
+            {/* Modified Grid Layout to include Camera Angle */}
+            <div className="grid grid-cols-2 gap-3">
+              <CustomSelect label={t.labels.shotType} value={selections.shotType} options={DATA_OPTIONS.shotType} onChange={v => updateSelection('shotType', v)} theme={theme} lang={lang} />
+              <CustomSelect label={t.labels.cameraAngle} value={selections.cameraAngle} options={DATA_OPTIONS.cameraAngle} onChange={v => updateSelection('cameraAngle', v)} theme={theme} lang={lang} />
+              <CustomSelect label={t.labels.frameSize} value={selections.frameSize} options={DATA_OPTIONS.frameSize} onChange={v => updateSelection('frameSize', v)} theme={theme} lang={lang} />
+              <CustomSelect label={t.labels.composition} value={selections.composition} options={DATA_OPTIONS.composition} onChange={v => updateSelection('composition', v)} theme={theme} lang={lang} />
+            </div>
             <div className="grid grid-cols-2 gap-3 pt-2"><CustomSelect label={t.labels.lightingStyle} value={selections.lighting} options={DATA_OPTIONS.lighting} onChange={v => updateSelection('lighting', v)} theme={theme} lang={lang} /><CustomSelect label={t.labels.lightSource} value={selections.lightingType} options={DATA_OPTIONS.lightingType} onChange={v => updateSelection('lightingType', v)} theme={theme} lang={lang} /></div>
             <div className="grid grid-cols-2 gap-3 pt-2"><CustomSelect label={t.labels.format} value={selections.format} options={DATA_OPTIONS.format} onChange={v => updateSelection('format', v)} theme={theme} lang={lang} /><CustomSelect label={t.labels.camera} value={selections.camera} options={DATA_OPTIONS.camera} onChange={v => updateSelection('camera', v)} theme={theme} lang={lang} /><CustomSelect label={t.labels.lens} value={selections.lensSize} options={DATA_OPTIONS.lensSize} onChange={v => updateSelection('lensSize', v)} theme={theme} lang={lang} /><CustomSelect label={t.labels.aperture} value={selections.aperture} options={DATA_OPTIONS.aperture} onChange={v => updateSelection('aperture', v)} theme={theme} lang={lang} /><div className="col-span-2"><CustomSelect label={t.labels.aspectRatio} value={selections.aspectRatio} options={DATA_OPTIONS.aspectRatio} onChange={v => updateSelection('aspectRatio', v)} theme={theme} lang={lang} /></div></div>
           </div>
