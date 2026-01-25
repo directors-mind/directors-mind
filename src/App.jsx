@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Copy, RefreshCw, Terminal, ChevronDown, X, Sparkles, Settings, Zap, Brain, Sun, Moon, Dice5, Image as ImageIcon, Check } from 'lucide-react';
 
-// --- v3.8.3 Fix: Complete Translation Map & Organized Structure ---
+// --- v3.8.4 Fix: 100% Genre Localization Coverage ---
 const UI_LABELS = {
   en: {
     appTitle: "Director's Mind",
-    version: "v3.8.3",
+    version: "v3.8.4",
     inspireMe: "Inspire Me",
     sections: { narrative: "NARRATIVE & SUBJECT", world: "WORLD & ATMOSPHERE", style: "STYLE & MOOD", color: "COLOR GRADING", tech: "CINEMATOGRAPHY SPECS" },
     tabs: { filter: "FILTER", rosco: "ROSCO", picker: "PICKER" },
@@ -26,7 +26,7 @@ const UI_LABELS = {
   },
   cn: {
     appTitle: "导演思维",
-    version: "v3.8.3",
+    version: "v3.8.4",
     inspireMe: "随机灵感",
     sections: { narrative: "叙事基础", world: "时空环境", style: "风格与影调", color: "色彩风格", tech: "摄影技术参数" },
     tabs: { filter: "滤镜", rosco: "Rosco 色纸", picker: "拾色器" },
@@ -49,7 +49,7 @@ const UI_LABELS = {
 
 const ETHNICITY_MAP = { "Asian": "亚裔", "Black / African Descent": "非裔 / 黑人", "Black": "黑人", "White": "白人", "Latinx": "拉丁裔", "Middle Eastern": "中东裔", "Indigenous": "原住民", "Mixed-race": "混血", "South-East Asian": "东南亚裔", "South Asian": "南亚裔" };
 
-// 重新整理的映射表，确保无遗漏
+// 重新校对后的完整映射表，已检查每一个 DATA_OPTIONS 中的 Key
 const GENERAL_MAP = {
   // --- Colors & Filters ---
   "Warm": "暖调", "Cool": "冷调", "Mixed": "混合色温", "Saturated": "高饱和", "Desaturated": "低饱和", "High Key": "高调", "Low Key": "低调", "Black & White": "黑白", "Teal & Orange": "青橙色调", "Red": "红色系", "Orange": "橙色系", "Yellow": "黄色系", "Green": "绿色系", "Cyan": "青色系", "Blue": "蓝色系", "Purple": "紫色系", "Magenta": "洋红系", "Pink": "粉色系", "White": "白色系", "Black": "黑色系", "Sepia": "怀旧褐色",
@@ -61,14 +61,35 @@ const GENERAL_MAP = {
   "Movie": "电影", "TV Episode": "电视剧集", "Music Video": "音乐录影带", "Commercial": "商业广告", "Documentary": "纪录片",
   // --- Environment (Location) ---
   "Interior": "室内", "Exterior": "室外", "Studio / Set": "摄影棚", "Green Screen": "绿幕", "On Location": "实地外景", "Underwater": "水下", "Space": "太空",
-  // --- Set Details (The problematic area fixed) ---
+  // --- Set Details ---
   "Apartment": "公寓", "Bedroom": "卧室", "Living Room": "客厅", "Kitchen": "厨房", "Bathroom": "浴室", "Office": "办公室", 
   "Bar / Pub / Club": "酒吧/俱乐部", "Restaurant / Diner": "餐厅/快餐店", "Hospital": "医院", "Classroom / School": "教室/学校", 
   "Car / Vehicle": "车内/交通工具", "Street / Alley": "街道/巷子", "Forest / Woods": "森林/树林", "Beach / Ocean": "海滩/海洋", 
   "Mountain": "山脉", "Rooftop": "屋顶/天台", "Warehouse": "仓库/废墟", "Spaceship / Sci-Fi": "太空飞船/科幻", 
   "Void / Abstract": "虚空/抽象背景", "Subway / Train": "地铁/火车", "Church": "教堂", "Temple": "寺庙",
-  // --- Genres ---
-  "Action": "动作", "Adventure": "冒险", "Animation": "动画", "Biopic": "传记", "Comedy": "喜剧", "Crime": "犯罪", "Drama": "剧情", "Fantasy": "奇幻", "History": "历史", "Horror": "恐怖", "Mystery": "悬疑", "Romance": "爱情", "Sci-Fi": "科幻", "Thriller": "惊悚", "War": "战争", "Western": "西部", "Cyberpunk": "赛博朋克", "Automotive": "汽车广告", "Fashion / Apparel": "时尚服饰", "Beauty & Cosmetics": "美妆", "Food / Tabletop": "美食/静物", "Performance (Band/Artist)": "乐队表演", "Narrative (Story)": "叙事类", "Biographical": "人物传记", "True Crime": "真实犯罪", "Nature / Wildlife": "自然生态", "Noir": "黑色电影", "Luxury": "奢侈品", "Tech": "科技产品", "Abstract": "抽象艺术", "Lifestyle": "生活方式", "Corporate": "企业宣传", "PSA": "公益广告", "VFX Heavy": "重特效",
+  
+  // --- Genres (Fully Patched) ---
+  // Movie/TV
+  "Action": "动作", "Adventure": "冒险", "Animation": "动画", "Biopic": "传记", "Comedy": "喜剧", "Crime": "犯罪", "Drama": "剧情", 
+  "Family": "家庭", "Fantasy": "奇幻", "Film Noir": "黑色电影", "History": "历史", "Horror": "恐怖", "Musical": "音乐歌舞", 
+  "Mystery": "悬疑", "Romance": "爱情", "Sci-Fi": "科幻", "Sport": "体育/运动", "Thriller": "惊悚", "War": "战争", "Western": "西部", 
+  "Neo-Noir": "新黑色电影", "Cyberpunk": "赛博朋克",
+  // Commercial
+  "Automotive": "汽车广告", "Beauty & Cosmetics": "美妆/护肤", "Beverage": "饮料/酒水", "Fashion / Apparel": "时尚服饰", 
+  "Fast Food": "快餐/餐饮", "Financial Services": "金融服务", "Fitness / Sport": "健身/运动", "Food / Tabletop": "美食/静物", 
+  "Fragrance": "香水", "Gaming": "游戏/电竞", "Health / Pharma": "医疗/制药", "Home Goods": "家居/家电", 
+  "Jewelry / Luxury": "珠宝/奢侈品", "Lifestyle": "生活方式", "Technology": "科技产品", "Travel / Tourism": "旅游/出行", 
+  "Airline": "航空", "Corporate": "企业形象", "PSA / Awareness": "公益/宣传", "Testimonial": "证言/采访", "VFX Heavy": "重特效",
+  // Music Video
+  "Performance (Band/Artist)": "乐队表演", "Narrative (Story)": "叙事类", "Conceptual": "概念类", "Abstract": "抽象/艺术", 
+  "Dance / Choreography": "舞蹈/编舞", "Hip Hop / Rap": "嘻哈/说唱", "Pop": "流行", "R&B / Soul": "R&B/灵魂乐", 
+  "Rock / Alternative": "摇滚/另类", "Indie": "独立音乐", "Electronic / EDM": "电子/EDM", "K-Pop": "K-Pop", 
+  "Latin / Reggaeton": "拉丁/雷鬼顿", "Metal": "金属乐", "Country": "乡村音乐", "Lo-Fi": "低保真 (Lo-Fi)", "Drill": "Drill", "Trap": "Trap",
+  // Documentary
+  "Biographical": "人物传记", "True Crime": "真实犯罪", "Nature / Wildlife": "自然生态", "Science / Tech": "科技/科学", 
+  "Historical": "历史题材", "Social Issue": "社会议题", "Sports Doc": "体育纪录", "Music / Arts": "音乐/艺术", 
+  "Travel / Expedition": "旅行/探险", "Observational": "观察类", "Archival": "档案/回顾",
+
   // --- Weather ---
   "Sunny": "晴朗", "Overcast": "阴天", "Rainy": "雨天", "Stormy": "暴风雨", "Foggy": "雾天", "Hazy": "朦胧/雾霾", "Snowy": "雪天", "Windy": "大风", "Clear Skies": "万里无云", "Drizzle": "毛毛雨", "Thunderstorm": "雷暴", "Sandstorm": "沙尘暴",
   // --- Shot Type ---
