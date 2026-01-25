@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Copy, RefreshCw, Terminal, ChevronDown, X, Sparkles, Settings, Zap, Brain, Sun, Moon, Dice5, Image as ImageIcon, Check } from 'lucide-react';
 
-// --- v3.8.0 Update: Added Camera Angle & Fixed Translations ---
+// --- v3.8.1 Update: Mobile Responsive Fix ---
 const UI_LABELS = {
   en: {
     appTitle: "Director's Mind",
-    version: "v3.8.0",
+    version: "v3.8.1",
     inspireMe: "Inspire Me",
     sections: { narrative: "NARRATIVE & SUBJECT", world: "WORLD & ATMOSPHERE", style: "STYLE & MOOD", color: "COLOR GRADING", tech: "CINEMATOGRAPHY SPECS" },
     tabs: { filter: "FILTER", rosco: "ROSCO", picker: "PICKER" },
@@ -26,7 +26,7 @@ const UI_LABELS = {
   },
   cn: {
     appTitle: "导演思维",
-    version: "v3.8.0",
+    version: "v3.8.1",
     inspireMe: "随机灵感",
     sections: { narrative: "叙事基础", world: "时空环境", style: "风格与影调", color: "色彩风格", tech: "摄影技术参数" },
     tabs: { filter: "滤镜", rosco: "Rosco 色纸", picker: "拾色器" },
@@ -57,7 +57,6 @@ const GENERAL_MAP = {
   "Interior": "室内", "Exterior": "室外", "Studio / Set": "摄影棚", "Green Screen": "绿幕", "On Location": "实地外景", "Underwater": "水下", "Space": "太空",
   "Action": "动作", "Adventure": "冒险", "Animation": "动画", "Biopic": "传记", "Comedy": "喜剧", "Crime": "犯罪", "Drama": "剧情", "Fantasy": "奇幻", "History": "历史", "Horror": "恐怖", "Mystery": "悬疑", "Romance": "爱情", "Sci-Fi": "科幻", "Thriller": "惊悚", "War": "战争", "Western": "西部", "Cyberpunk": "赛博朋克", "Automotive": "汽车广告", "Fashion / Apparel": "时尚服饰", "Beauty & Cosmetics": "美妆", "Food / Tabletop": "美食/静物", "Performance (Band/Artist)": "乐队表演", "Narrative (Story)": "叙事类", "Biographical": "人物传记", "True Crime": "真实犯罪", "Nature / Wildlife": "自然生态", "Noir": "黑色电影", "Luxury": "奢侈品", "Tech": "科技产品", "Abstract": "抽象艺术", "Lifestyle": "生活方式", "Corporate": "企业宣传", "PSA": "公益广告", "VFX Heavy": "重特效",
   "Sunny": "晴朗", "Overcast": "阴天", "Rainy": "雨天", "Stormy": "暴风雨", "Foggy": "雾天", "Hazy": "朦胧/雾霾", "Snowy": "雪天", "Windy": "大风", "Clear Skies": "万里无云", "Drizzle": "毛毛雨", "Thunderstorm": "雷暴", "Sandstorm": "沙尘暴",
-  "Apartment": "公寓", "Bedroom": "卧室", "Living Room": "客厅", "Kitchen": "厨房", "Bathroom": "浴室", "Office": "办公室", "Bar / Pub / Club": "酒吧/俱乐部", "Restaurant / Diner": "餐厅/快餐店", "Hospital": "医院", "Classroom / School": "教室/学校", "Car / Vehicle": "车内/交通工具", "Street / Alley": "街道/巷子", "Forest / Woods": "森林/树林", "Beach / Ocean": "海滩/海洋", "Mountain": "山脉", "Rooftop": "屋顶/天台", "Warehouse": "仓库/废墟", "Spaceship / Sci-Fi": "太空飞船/科幻", "Void / Abstract": "虚空/抽象背景", "Subway / Train": "地铁/火车", "Church": "教堂", "Street": "街道", "Forest": "森林", "Spaceship": "太空飞船", "Void": "虚空",
   "Static Shot": "固定镜头", "Panning": "摇镜头 (Pan)", "Tilt": "俯仰镜头 (Tilt)", "Dolly In": "推镜头 (Dolly In)", "Dolly Out": "拉镜头 (Dolly Out)", "Tracking Shot": "跟拍 (Track)", "Crab Shot": "横移 (Crab)", "Arc Shot": "弧形运动 (Arc)", "Handheld": "手持摄影", "Steadicam": "斯坦尼康", "Gimbal Flow": "稳定器跟随", "Shakey Cam": "剧烈晃动", "Whiplash": "极速甩镜",
   "Eye Level (Neutral)": "平视 (中性)", "Low Angle (Heroic)": "仰拍 (英雄视角)", "High Angle (Vulnerability)": "俯拍 (弱势视角)", "Overhead / God's Eye": "上帝视角 / 顶拍", "Worm's Eye View": "虫视 / 极低角度", "Dutch Angle / Canted": "德式倾斜 / 不安感", "Over the Shoulder": "过肩镜头", "POV (Point of View)": "主观视角 (POV)", "Ground Level": "地面视角", "Knee Level": "膝盖视角", "Bird's Eye View": "鸟瞰", "Drone / Aerial": "无人机 / 航拍", "Selfie Angle": "自拍视角",
   "Extreme Close Up": "极特写", "Close Up": "特写", "Medium Close Up": "中特写", "Medium Shot": "中景", "Cowboy Shot": "七分身/牛仔景", "Full Shot": "全景", "Wide Shot": "远景", "Extreme Wide": "大远景",
@@ -93,9 +92,7 @@ const DATA_OPTIONS = {
   colorFilters: ["Warm", "Cool", "Mixed", "Saturated", "Desaturated", "High Key", "Low Key", "Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple", "Magenta", "Pink", "White", "Sepia", "Black & White", "Teal & Orange"],
   roscoColors: Object.keys(ROSCO_HEX_MAP),
   weather: ["Sunny", "Overcast", "Rainy", "Stormy", "Foggy", "Hazy", "Snowy", "Windy", "Clear Skies", "Drizzle", "Thunderstorm", "Sandstorm"],
-  // REVISED: Simplified Shot Type (Motion focused)
   shotType: ["Static Shot", "Panning", "Tilt", "Dolly In", "Dolly Out", "Tracking Shot", "Crab Shot", "Arc Shot", "Handheld", "Steadicam", "Gimbal Flow", "Shakey Cam", "Whiplash"],
-  // NEW: Camera Angle (Position focused)
   cameraAngle: [
     "Eye Level (Neutral)", "Low Angle (Heroic)", "High Angle (Vulnerability)", 
     "Overhead / God's Eye", "Worm's Eye View", "Dutch Angle / Canted", 
@@ -252,7 +249,6 @@ export default function DirectorsMind() {
   const [lang, setLang] = useState("cn");
   const [apiKey, setApiKey] = useState("");
   const [showSettings, setShowSettings] = useState(false);
-  // Updated state to include cameraAngle
   const [selections, setSelections] = useState({ mediaType: "Movie", format: "", genre: [], location: "", set: "", weather: "", shotType: "", cameraAngle: "", frameSize: "", composition: "", lighting: "", lightingType: "", camera: "", lensSize: "", aspectRatio: "2.39:1 (Scope)", timeOfDay: "", aperture: "", gender: "", age: "", ethnicity: "", color: [] });
   const [tags, setTags] = useState(["Cinematic", "High Detail"]);
   const [prompt, setPrompt] = useState("");
@@ -271,7 +267,7 @@ export default function DirectorsMind() {
       set: r(DATA_OPTIONS.set), 
       weather: r(DATA_OPTIONS.weather), 
       shotType: r(DATA_OPTIONS.shotType), 
-      cameraAngle: r(DATA_OPTIONS.cameraAngle), // Added to randomizer
+      cameraAngle: r(DATA_OPTIONS.cameraAngle),
       frameSize: r(DATA_OPTIONS.frameSize), 
       composition: r(DATA_OPTIONS.composition), 
       lighting: r(DATA_OPTIONS.lighting), 
@@ -292,7 +288,6 @@ export default function DirectorsMind() {
   useEffect(() => {
     const subject = [selections.age, selections.ethnicity, selections.gender].filter(Boolean).join(" ") || "subject";
     const apVal = selections.aperture ? selections.aperture.split(' - ')[0] : "";
-    // Added selections.cameraAngle to the parts array
     const parts = [selections.shotType, selections.cameraAngle, `of a ${subject}`, selections.frameSize, selections.mediaType, Array.isArray(selections.genre)?selections.genre.join(", "):"", tags.join(", "), selections.location ? `in ${selections.location}` : "", selections.set, selections.weather, selections.timeOfDay, selections.lighting, selections.color.join(", ")].filter(Boolean);
     const tech = [selections.format, selections.camera, selections.lensSize, apVal, selections.aspectRatio, "8k"].filter(Boolean).join(", ");
     setPrompt(`/imagine prompt: ${parts.join(", ")}. --ar ${selections.aspectRatio?.split(':')[0] || "16:9"} --params ${tech}`);
@@ -323,8 +318,11 @@ export default function DirectorsMind() {
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
-        <aside className={`w-[400px] shrink-0 flex flex-col overflow-y-auto custom-scrollbar ${sidebarBg}`}>
+      {/* Main Responsive Layout: Col on Mobile, Row on Desktop */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        
+        {/* Sidebar: Bottom on Mobile (Controls), Left on Desktop */}
+        <aside className={`w-full md:w-[400px] flex-1 md:flex-none order-2 md:order-1 flex flex-col overflow-y-auto custom-scrollbar ${sidebarBg}`}>
           {showSettings && <div className={`p-4 border-b ${theme === 'dark' ? 'bg-[#111] border-white/5' : 'bg-gray-50 border-black/5'}`}><label className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-2 block">{t.apiKey}</label><div className="flex gap-2"><input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="Paste Key..." className={`flex-1 text-xs px-2 py-1.5 rounded border outline-none ${theme === 'dark' ? 'bg-black border-white/10' : 'bg-white border-black/10'}`}/><button onClick={() => setShowSettings(false)} className="text-[10px] px-2 bg-blue-600 text-white rounded">{t.save}</button></div></div>}
           
           <div className="p-5 flex flex-col gap-4">
@@ -357,7 +355,6 @@ export default function DirectorsMind() {
 
           <div className="p-5 flex flex-col gap-4 pb-20">
             <h3 className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{t.sections.tech}</h3>
-            {/* Modified Grid Layout to include Camera Angle */}
             <div className="grid grid-cols-2 gap-3">
               <CustomSelect label={t.labels.shotType} value={selections.shotType} options={DATA_OPTIONS.shotType} onChange={v => updateSelection('shotType', v)} theme={theme} lang={lang} />
               <CustomSelect label={t.labels.cameraAngle} value={selections.cameraAngle} options={DATA_OPTIONS.cameraAngle} onChange={v => updateSelection('cameraAngle', v)} theme={theme} lang={lang} />
@@ -369,16 +366,17 @@ export default function DirectorsMind() {
           </div>
         </aside>
 
-        <main className="flex-1 flex flex-col relative bg-checkered">
+        {/* Main Content: Top on Mobile (Preview), Right on Desktop */}
+        <main className="h-[35vh] md:h-auto w-full md:flex-1 order-1 md:order-2 flex flex-col relative bg-checkered">
           <div className={`absolute inset-0 pointer-events-none ${theme === 'dark' ? 'bg-gradient-to-br from-[#050505] to-[#1a1a1a]' : 'bg-[#f0f0f2]'}`}></div>
-          <div className="flex-1 flex items-center justify-center p-10 z-10 overflow-hidden relative group">
-             {generatedImage ? <div className="relative shadow-2xl rounded-sm overflow-hidden animate-in fade-in zoom-in duration-500"><img src={generatedImage} alt="Concept" className="max-w-full max-h-[80vh] object-contain shadow-2xl" /><div className="absolute inset-0 ring-1 ring-white/10 pointer-events-none"></div></div> : <div className={`flex flex-col items-center gap-4 opacity-20 ${theme === 'dark' ? 'text-white' : 'text-black'}`}><div className="w-24 h-24 rounded-2xl border-2 border-dashed border-current flex items-center justify-center"><ImageIcon size={48} strokeWidth={1} /></div><p className="text-sm font-medium tracking-widest uppercase">{t.ready}</p></div>}
+          <div className="flex-1 flex items-center justify-center p-6 md:p-10 z-10 overflow-hidden relative group">
+             {generatedImage ? <div className="relative shadow-2xl rounded-sm overflow-hidden animate-in fade-in zoom-in duration-500"><img src={generatedImage} alt="Concept" className="max-w-full max-h-[80vh] object-contain shadow-2xl" /><div className="absolute inset-0 ring-1 ring-white/10 pointer-events-none"></div></div> : <div className={`flex flex-col items-center gap-4 opacity-20 ${theme === 'dark' ? 'text-white' : 'text-black'}`}><div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl border-2 border-dashed border-current flex items-center justify-center"><ImageIcon size={32} md:size={48} strokeWidth={1} /></div><p className="text-xs md:text-sm font-medium tracking-widest uppercase">{t.ready}</p></div>}
           </div>
-          <div className="shrink-0 p-6 z-20 flex justify-center">
+          <div className="shrink-0 p-4 md:p-6 z-20 flex justify-center">
             <div className={`w-full max-w-4xl rounded-xl border backdrop-blur-xl shadow-2xl flex flex-col overflow-hidden transition-all ${theme === 'dark' ? 'bg-[#111]/80 border-white/10' : 'bg-white/80 border-black/10'}`}>
               <div className={`px-4 py-3 border-b flex justify-between items-center ${theme === 'dark' ? 'border-white/5 bg-black/20' : 'border-black/5 bg-gray-50/50'}`}><div className="flex items-center gap-2"><Terminal size={12} className="text-blue-500" /><span className="text-[10px] font-bold uppercase tracking-wider opacity-50">{t.promptTerminal}</span></div><button onClick={() => navigator.clipboard.writeText(prompt)} className="opacity-50 hover:opacity-100 transition"><Copy size={12}/></button></div>
-              <div className="p-4 font-mono text-xs leading-relaxed opacity-80 max-h-[80px] overflow-y-auto custom-scrollbar">{prompt || <span className="opacity-30">Prompt will appear here...</span>}</div>
-              <button onClick={handleAction} disabled={isGenerating} className={`h-12 w-full flex items-center justify-center gap-2 font-bold text-sm tracking-wide transition-all ${isGenerating ? 'bg-neutral-500 cursor-not-allowed text-white' : apiKey ? 'bg-blue-600 hover:bg-blue-500 text-white' : theme === 'dark' ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800'}`}>{isGenerating ? <><RefreshCw size={16} className="animate-spin"/> {t.processing}</> : apiKey ? <><Zap size={16} className="text-yellow-300 fill-current"/> {t.generate}</> : <><Copy size={16}/> {t.copyPrompt}</>}</button>
+              <div className="p-4 font-mono text-xs leading-relaxed opacity-80 max-h-[60px] md:max-h-[80px] overflow-y-auto custom-scrollbar">{prompt || <span className="opacity-30">Prompt will appear here...</span>}</div>
+              <button onClick={handleAction} disabled={isGenerating} className={`h-10 md:h-12 w-full flex items-center justify-center gap-2 font-bold text-sm tracking-wide transition-all ${isGenerating ? 'bg-neutral-500 cursor-not-allowed text-white' : apiKey ? 'bg-blue-600 hover:bg-blue-500 text-white' : theme === 'dark' ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800'}`}>{isGenerating ? <><RefreshCw size={16} className="animate-spin"/> {t.processing}</> : apiKey ? <><Zap size={16} className="text-yellow-300 fill-current"/> {t.generate}</> : <><Copy size={16}/> {t.copyPrompt}</>}</button>
             </div>
           </div>
         </main>
