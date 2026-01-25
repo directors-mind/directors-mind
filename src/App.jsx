@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Copy, RefreshCw, Terminal, ChevronDown, X, Sparkles, Settings, Zap, Brain, Sun, Moon, Dice5, Image as ImageIcon, Check } from 'lucide-react';
 
-// --- v3.8.1 Update: Mobile Responsive Fix ---
+// --- v3.8.2 Update: UI Polish (Minimal Header + Spacing) ---
 const UI_LABELS = {
   en: {
     appTitle: "Director's Mind",
-    version: "v3.8.1",
+    version: "v3.8.2",
     inspireMe: "Inspire Me",
     sections: { narrative: "NARRATIVE & SUBJECT", world: "WORLD & ATMOSPHERE", style: "STYLE & MOOD", color: "COLOR GRADING", tech: "CINEMATOGRAPHY SPECS" },
     tabs: { filter: "FILTER", rosco: "ROSCO", picker: "PICKER" },
@@ -26,7 +26,7 @@ const UI_LABELS = {
   },
   cn: {
     appTitle: "导演思维",
-    version: "v3.8.1",
+    version: "v3.8.2",
     inspireMe: "随机灵感",
     sections: { narrative: "叙事基础", world: "时空环境", style: "风格与影调", color: "色彩风格", tech: "摄影技术参数" },
     tabs: { filter: "滤镜", rosco: "Rosco 色纸", picker: "拾色器" },
@@ -267,7 +267,7 @@ export default function DirectorsMind() {
       set: r(DATA_OPTIONS.set), 
       weather: r(DATA_OPTIONS.weather), 
       shotType: r(DATA_OPTIONS.shotType), 
-      cameraAngle: r(DATA_OPTIONS.cameraAngle),
+      cameraAngle: r(DATA_OPTIONS.cameraAngle), // Added to randomizer
       frameSize: r(DATA_OPTIONS.frameSize), 
       composition: r(DATA_OPTIONS.composition), 
       lighting: r(DATA_OPTIONS.lighting), 
@@ -306,8 +306,7 @@ export default function DirectorsMind() {
     <div className={`h-screen w-screen flex flex-col overflow-hidden font-sans antialiased selection:bg-blue-500/30 ${bgMain} ${textMain}`}>
       <header className={`h-12 shrink-0 px-4 flex justify-between items-center z-50 border-b backdrop-blur-md ${theme === 'dark' ? 'border-white/5 bg-black/80' : 'border-black/5 bg-white/80'}`}>
         <div className="flex items-center gap-3">
-          <div className="flex gap-1.5 mr-2"><div className="w-3 h-3 rounded-full bg-[#FF5F57]"></div><div className="w-3 h-3 rounded-full bg-[#FEBC2E]"></div><div className="w-3 h-3 rounded-full bg-[#28C840]"></div></div>
-          <div className="h-4 w-px bg-white/10 mx-1"></div>
+          {/* REMOVED: Traffic light dots */}
           <div className="flex items-center gap-2"><div className={`w-6 h-6 rounded-md flex items-center justify-center shadow-sm ${theme === 'dark' ? 'bg-white text-black' : 'bg-black text-white'}`}><Brain size={14} strokeWidth={2}/></div><span className="text-xs font-bold tracking-wide">{t.appTitle} <span className="opacity-40 font-normal">PRO</span></span></div>
         </div>
         <div className="flex items-center gap-3">
@@ -367,9 +366,11 @@ export default function DirectorsMind() {
         </aside>
 
         {/* Main Content: Top on Mobile (Preview), Right on Desktop */}
-        <main className="h-[35vh] md:h-auto w-full md:flex-1 order-1 md:order-2 flex flex-col relative bg-checkered">
+        {/* CHANGED: h-[35vh] -> h-[40vh] for taller mobile view */}
+        <main className="h-[40vh] md:h-auto w-full md:flex-1 order-1 md:order-2 flex flex-col relative bg-checkered">
           <div className={`absolute inset-0 pointer-events-none ${theme === 'dark' ? 'bg-gradient-to-br from-[#050505] to-[#1a1a1a]' : 'bg-[#f0f0f2]'}`}></div>
-          <div className="flex-1 flex items-center justify-center p-6 md:p-10 z-10 overflow-hidden relative group">
+          {/* CHANGED: Added pt-8 md:pt-16 to pull down from header */}
+          <div className="flex-1 flex items-center justify-center p-6 md:p-10 pt-8 md:pt-16 z-10 overflow-hidden relative group">
              {generatedImage ? <div className="relative shadow-2xl rounded-sm overflow-hidden animate-in fade-in zoom-in duration-500"><img src={generatedImage} alt="Concept" className="max-w-full max-h-[80vh] object-contain shadow-2xl" /><div className="absolute inset-0 ring-1 ring-white/10 pointer-events-none"></div></div> : <div className={`flex flex-col items-center gap-4 opacity-20 ${theme === 'dark' ? 'text-white' : 'text-black'}`}><div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl border-2 border-dashed border-current flex items-center justify-center"><ImageIcon size={32} md:size={48} strokeWidth={1} /></div><p className="text-xs md:text-sm font-medium tracking-widest uppercase">{t.ready}</p></div>}
           </div>
           <div className="shrink-0 p-4 md:p-6 z-20 flex justify-center">
