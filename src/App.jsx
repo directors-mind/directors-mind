@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Copy, RefreshCw, Terminal, ChevronDown, X, Sparkles, Settings, Zap, Brain, Sun, Moon, Dice5, Image as ImageIcon, Check } from 'lucide-react';
 
-// --- v3.8.2 Update: UI Polish (Minimal Header + Spacing) ---
+// --- v3.8.3 Fix: Complete Translation Map & Organized Structure ---
 const UI_LABELS = {
   en: {
     appTitle: "Director's Mind",
-    version: "v3.8.2",
+    version: "v3.8.3",
     inspireMe: "Inspire Me",
     sections: { narrative: "NARRATIVE & SUBJECT", world: "WORLD & ATMOSPHERE", style: "STYLE & MOOD", color: "COLOR GRADING", tech: "CINEMATOGRAPHY SPECS" },
     tabs: { filter: "FILTER", rosco: "ROSCO", picker: "PICKER" },
@@ -26,7 +26,7 @@ const UI_LABELS = {
   },
   cn: {
     appTitle: "导演思维",
-    version: "v3.8.2",
+    version: "v3.8.3",
     inspireMe: "随机灵感",
     sections: { narrative: "叙事基础", world: "时空环境", style: "风格与影调", color: "色彩风格", tech: "摄影技术参数" },
     tabs: { filter: "滤镜", rosco: "Rosco 色纸", picker: "拾色器" },
@@ -49,24 +49,49 @@ const UI_LABELS = {
 
 const ETHNICITY_MAP = { "Asian": "亚裔", "Black / African Descent": "非裔 / 黑人", "Black": "黑人", "White": "白人", "Latinx": "拉丁裔", "Middle Eastern": "中东裔", "Indigenous": "原住民", "Mixed-race": "混血", "South-East Asian": "东南亚裔", "South Asian": "南亚裔" };
 
+// 重新整理的映射表，确保无遗漏
 const GENERAL_MAP = {
+  // --- Colors & Filters ---
   "Warm": "暖调", "Cool": "冷调", "Mixed": "混合色温", "Saturated": "高饱和", "Desaturated": "低饱和", "High Key": "高调", "Low Key": "低调", "Black & White": "黑白", "Teal & Orange": "青橙色调", "Red": "红色系", "Orange": "橙色系", "Yellow": "黄色系", "Green": "绿色系", "Cyan": "青色系", "Blue": "蓝色系", "Purple": "紫色系", "Magenta": "洋红系", "Pink": "粉色系", "White": "白色系", "Black": "黑色系", "Sepia": "怀旧褐色",
+  // --- Rosco Gels ---
   "R02 - Bastard Amber": "R02 - 琥珀色", "R08 - Pale Gold": "R08 - 浅金色", "R12 - Straw": "R12 - 麦黄色", "R27 - Medium Red": "R27 - 中红色", "R34 - Flesh Pink": "R34 - 肤粉色", "R44 - Middle Rose": "R44 - 玫瑰红", "R60 - No Color Blue": "R60 - 无色蓝", "R80 - Primary Blue": "R80 - 原蓝色", "R83 - Medium Blue": "R83 - 中蓝色", "R89 - Moss Green": "R89 - 苔藓绿", "R90 - Dark Yellow Green": "R90 - 暗黄绿", "CTB - Full Blue": "CTB - 全蓝温", "CTO - Full Orange": "CTO - 全橙温", "R3202 - Full Blue": "R3202 - 全蓝", "R3204 - Half Blue": "R3204 - 半蓝", "R382 - Congo Blue": "R382 - 刚果蓝", "R321 - Golden Amber": "R321 - 金琥珀", "R3208 - Quarter Blue": "R3208 - 四分之一蓝",
+  // --- Visual Tags ---
   "Cinematic": "电影感", "High Detail": "高细节", "Masterpiece": "杰作", "Trending on ArtStation": "ArtStation热榜", "Cinematic Lighting": "电影级布光",
+  // --- Media Type ---
   "Movie": "电影", "TV Episode": "电视剧集", "Music Video": "音乐录影带", "Commercial": "商业广告", "Documentary": "纪录片",
+  // --- Environment (Location) ---
   "Interior": "室内", "Exterior": "室外", "Studio / Set": "摄影棚", "Green Screen": "绿幕", "On Location": "实地外景", "Underwater": "水下", "Space": "太空",
+  // --- Set Details (The problematic area fixed) ---
+  "Apartment": "公寓", "Bedroom": "卧室", "Living Room": "客厅", "Kitchen": "厨房", "Bathroom": "浴室", "Office": "办公室", 
+  "Bar / Pub / Club": "酒吧/俱乐部", "Restaurant / Diner": "餐厅/快餐店", "Hospital": "医院", "Classroom / School": "教室/学校", 
+  "Car / Vehicle": "车内/交通工具", "Street / Alley": "街道/巷子", "Forest / Woods": "森林/树林", "Beach / Ocean": "海滩/海洋", 
+  "Mountain": "山脉", "Rooftop": "屋顶/天台", "Warehouse": "仓库/废墟", "Spaceship / Sci-Fi": "太空飞船/科幻", 
+  "Void / Abstract": "虚空/抽象背景", "Subway / Train": "地铁/火车", "Church": "教堂", "Temple": "寺庙",
+  // --- Genres ---
   "Action": "动作", "Adventure": "冒险", "Animation": "动画", "Biopic": "传记", "Comedy": "喜剧", "Crime": "犯罪", "Drama": "剧情", "Fantasy": "奇幻", "History": "历史", "Horror": "恐怖", "Mystery": "悬疑", "Romance": "爱情", "Sci-Fi": "科幻", "Thriller": "惊悚", "War": "战争", "Western": "西部", "Cyberpunk": "赛博朋克", "Automotive": "汽车广告", "Fashion / Apparel": "时尚服饰", "Beauty & Cosmetics": "美妆", "Food / Tabletop": "美食/静物", "Performance (Band/Artist)": "乐队表演", "Narrative (Story)": "叙事类", "Biographical": "人物传记", "True Crime": "真实犯罪", "Nature / Wildlife": "自然生态", "Noir": "黑色电影", "Luxury": "奢侈品", "Tech": "科技产品", "Abstract": "抽象艺术", "Lifestyle": "生活方式", "Corporate": "企业宣传", "PSA": "公益广告", "VFX Heavy": "重特效",
+  // --- Weather ---
   "Sunny": "晴朗", "Overcast": "阴天", "Rainy": "雨天", "Stormy": "暴风雨", "Foggy": "雾天", "Hazy": "朦胧/雾霾", "Snowy": "雪天", "Windy": "大风", "Clear Skies": "万里无云", "Drizzle": "毛毛雨", "Thunderstorm": "雷暴", "Sandstorm": "沙尘暴",
+  // --- Shot Type ---
   "Static Shot": "固定镜头", "Panning": "摇镜头 (Pan)", "Tilt": "俯仰镜头 (Tilt)", "Dolly In": "推镜头 (Dolly In)", "Dolly Out": "拉镜头 (Dolly Out)", "Tracking Shot": "跟拍 (Track)", "Crab Shot": "横移 (Crab)", "Arc Shot": "弧形运动 (Arc)", "Handheld": "手持摄影", "Steadicam": "斯坦尼康", "Gimbal Flow": "稳定器跟随", "Shakey Cam": "剧烈晃动", "Whiplash": "极速甩镜",
+  // --- Camera Angle ---
   "Eye Level (Neutral)": "平视 (中性)", "Low Angle (Heroic)": "仰拍 (英雄视角)", "High Angle (Vulnerability)": "俯拍 (弱势视角)", "Overhead / God's Eye": "上帝视角 / 顶拍", "Worm's Eye View": "虫视 / 极低角度", "Dutch Angle / Canted": "德式倾斜 / 不安感", "Over the Shoulder": "过肩镜头", "POV (Point of View)": "主观视角 (POV)", "Ground Level": "地面视角", "Knee Level": "膝盖视角", "Bird's Eye View": "鸟瞰", "Drone / Aerial": "无人机 / 航拍", "Selfie Angle": "自拍视角",
+  // --- Frame Size ---
   "Extreme Close Up": "极特写", "Close Up": "特写", "Medium Close Up": "中特写", "Medium Shot": "中景", "Cowboy Shot": "七分身/牛仔景", "Full Shot": "全景", "Wide Shot": "远景", "Extreme Wide": "大远景",
+  // --- Composition ---
   "Center Framed": "居中构图", "Rule of Thirds": "三分法", "Symmetrical": "对称", "Negative Space": "留白", "Looking at Camera": "直视镜头", "Right heavy": "右侧重", "Left heavy": "左侧重", "Balanced": "平衡", "Leading Lines": "引导线", "Frame within a Frame": "框中框",
+  // --- Lighting ---
   "Soft light": "柔光", "Hard light": "硬光", "High contrast": "高反差", "Low contrast": "低反差", "Silhouette": "剪影", "Rim Light": "轮廓光", "Backlight": "逆光", "Chiaroscuro": "明暗对照法", "Volumetric": "体积光", "Rembrandt": "伦勃朗光",
+  // --- Light Source ---
   "Natural Daylight": "自然光", "Moonlight": "月光", "Tungsten": "钨丝灯(暖)", "Neon": "霓虹灯", "Fire/Candle": "火光/烛光", "Practical": "道具光", "Mixed": "混合光源", "Studio Strobe": "摄影棚闪光", "Motivated light": "动机光", "Artificial light": "人造光", "Practical light": "道具光",
+  // --- Time of Day ---
   "Dawn": "黎明", "Sunrise": "日出", "Day": "白天", "Golden Hour": "黄金时刻", "Blue Hour": "蓝调时刻", "Dusk": "黄昏", "Night": "夜晚", "Midnight": "午夜", "High Noon": "正午",
+  // --- Format ---
   "Film - 35mm": "35mm 胶片", "Film - 16mm": "16mm 胶片", "Film - IMAX": "IMAX 胶片", "Digital": "数字摄影", "Animation": "动画", "Stop Motion": "定格动画", "Film - Super 8mm": "超8mm 胶片", "Film - 65mm / 70mm": "65/70mm 胶片", "Digital - Large Format": "数字大画幅", "Tape": "磁带",
+  // --- Lens ---
   "Ultra Wide (<18mm)": "超广角", "Wide (24-35mm)": "广角", "Standard (50mm)": "标准", "Telephoto (>85mm)": "长焦", "Macro": "微距", "Anamorphic": "变形宽银幕", "Vintage": "复古镜头", "Zoom": "变焦", "Fisheye": "鱼眼", "Wide (24mm)": "广角 (24mm)", "Standard (50mm)": "标准 (50mm)", "Telephoto (85mm)": "长焦 (85mm)", "Film Camera": "胶片摄影机",
+  // --- Aperture ---
   "T1.3 - Dreamy Bokeh": "T1.3 - 梦幻虚化", "T1.8 - Shallow Depth": "T1.8 - 浅景深", "T2.8 - Cinematic Standard": "T2.8 - 电影标准", "T5.6 - Medium Depth": "T5.6 - 中等景深", "T8 - Deep Focus": "T8 - 大景深", "T16 - Everything Sharp": "T16 - 全景清晰",
+  // --- Demographics ---
   "Male": "男性", "Female": "女性", "Baby": "婴儿", "Toddler": "幼童", "Child": "儿童", "Teenager": "青少年", "Young Adult": "年轻人", "Mid-adult": "壮年", "Middle age": "中年", "Senior": "老年", "Elderly": "高龄", "Teen": "青少年", "Adult": "成年人"
 };
 
@@ -109,7 +134,7 @@ const DATA_OPTIONS = {
   aspectRatio: ["1.33:1 (4:3)", "1.78:1 (16:9)", "1.85:1", "2.00:1 (Univisium)", "2.35:1 (Scope)", "2.39:1", "2.76:1 (Ultra Panavision)", "9:16 (Vertical)"],
   timeOfDay: ["Dawn", "Sunrise", "Day", "Golden Hour", "Blue Hour", "Dusk", "Night", "Midnight"],
   location: ["Interior", "Exterior", "Studio / Set", "Green Screen", "On Location", "Underwater", "Space"],
-  set: ["Apartment", "Bedroom", "Living Room", "Kitchen", "Bathroom", "Office", "Bar / Pub / Club", "Restaurant / Diner", "Hospital", "Classroom / School", "Car / Vehicle", "Street / Alley", "Forest / Woods", "Beach / Ocean", "Mountain", "Rooftop", "Warehouse", "Spaceship / Sci-Fi", "Void / Abstract", "Subway / Train", "Church"],
+  set: ["Apartment", "Bedroom", "Living Room", "Kitchen", "Bathroom", "Office", "Bar / Pub / Club", "Restaurant / Diner", "Hospital", "Classroom / School", "Car / Vehicle", "Street / Alley", "Forest / Woods", "Beach / Ocean", "Mountain", "Rooftop", "Warehouse", "Spaceship / Sci-Fi", "Void / Abstract", "Subway / Train", "Church", "Temple"],
   character: {
     gender: ["Male", "Female"],
     age: ["Baby", "Toddler", "Child", "Teenager", "Young Adult", "Mid-adult", "Middle age", "Senior", "Elderly"],
@@ -306,7 +331,6 @@ export default function DirectorsMind() {
     <div className={`h-screen w-screen flex flex-col overflow-hidden font-sans antialiased selection:bg-blue-500/30 ${bgMain} ${textMain}`}>
       <header className={`h-12 shrink-0 px-4 flex justify-between items-center z-50 border-b backdrop-blur-md ${theme === 'dark' ? 'border-white/5 bg-black/80' : 'border-black/5 bg-white/80'}`}>
         <div className="flex items-center gap-3">
-          {/* REMOVED: Traffic light dots */}
           <div className="flex items-center gap-2"><div className={`w-6 h-6 rounded-md flex items-center justify-center shadow-sm ${theme === 'dark' ? 'bg-white text-black' : 'bg-black text-white'}`}><Brain size={14} strokeWidth={2}/></div><span className="text-xs font-bold tracking-wide">{t.appTitle} <span className="opacity-40 font-normal">PRO</span></span></div>
         </div>
         <div className="flex items-center gap-3">
@@ -366,10 +390,8 @@ export default function DirectorsMind() {
         </aside>
 
         {/* Main Content: Top on Mobile (Preview), Right on Desktop */}
-        {/* CHANGED: h-[35vh] -> h-[40vh] for taller mobile view */}
         <main className="h-[40vh] md:h-auto w-full md:flex-1 order-1 md:order-2 flex flex-col relative bg-checkered">
           <div className={`absolute inset-0 pointer-events-none ${theme === 'dark' ? 'bg-gradient-to-br from-[#050505] to-[#1a1a1a]' : 'bg-[#f0f0f2]'}`}></div>
-          {/* CHANGED: Added pt-8 md:pt-16 to pull down from header */}
           <div className="flex-1 flex items-center justify-center p-6 md:p-10 pt-8 md:pt-16 z-10 overflow-hidden relative group">
              {generatedImage ? <div className="relative shadow-2xl rounded-sm overflow-hidden animate-in fade-in zoom-in duration-500"><img src={generatedImage} alt="Concept" className="max-w-full max-h-[80vh] object-contain shadow-2xl" /><div className="absolute inset-0 ring-1 ring-white/10 pointer-events-none"></div></div> : <div className={`flex flex-col items-center gap-4 opacity-20 ${theme === 'dark' ? 'text-white' : 'text-black'}`}><div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl border-2 border-dashed border-current flex items-center justify-center"><ImageIcon size={32} md:size={48} strokeWidth={1} /></div><p className="text-xs md:text-sm font-medium tracking-widest uppercase">{t.ready}</p></div>}
           </div>
