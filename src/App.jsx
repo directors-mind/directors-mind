@@ -395,24 +395,6 @@ const ColorPanel = ({ selection, setSelection, label }) => {
 };
 
 
-const Toast = ({ show, leaving, message }) => {
-  if (!show && !leaving) return null;
-
-  return (
-    <div
-      className={
-        "fixed bottom-6 right-6 z-[200] " +
-        (leaving ? "toast-out" : "toast-in")
-      }
-    >
-      <div className="bg-white text-black px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-medium">
-        <Check size={14} className="text-emerald-500" />
-        {message}
-      </div>
-    </div>
-  );
-};
-
 
 export default function DirectorsMind() {
 
@@ -429,35 +411,12 @@ export default function DirectorsMind() {
   const [prompt, setPrompt] = useState("");
 
 
-  // 新增：提示词风格 tab（"mj" | "nano"）
-  const [promptMode, setPromptMode] = useState("mj");
-
-  // 新增：Toast 控制
-  const [toastVisible, setToastVisible] = useState(false);
-  const [toastLeaving, setToastLeaving] = useState(false);
-
 
   const t = UI_LABELS;
 
   
 
   // --- 核心联动更新函数 ---
-
-    // 触发复制并展示 Toast
-  const triggerCopyToast = () => {
-    if (!prompt) return;
-    navigator.clipboard.writeText(prompt);
-    setToastVisible(true);
-    setToastLeaving(false);
-
-    // 1.6 秒后开始退出动画
-    setTimeout(() => setToastLeaving(true), 1600);
-    // 2 秒后彻底隐藏
-    setTimeout(() => {
-      setToastVisible(false);
-      setToastLeaving(false);
-    }, 2000);
-  };
 
   const updateSelection = (k, v) => {
 
@@ -504,99 +463,52 @@ export default function DirectorsMind() {
 
 
   useEffect(() => {
+
     const s = selections;
+
     
-    // 景别 -> 镜头强化
+
+    // 算法逻辑：极端景别权重补足
+
     const isECU = s.frameSize === "Extreme Close Up";
-    const lensText = isECU
-      ? "100mm Macro Lens, extremely shallow depth, detailed surface"
-      : s.lensSize;
 
-    // 是否是背面视角
-    const isReverse =
-      s.cameraAngle &&
-      (s.cameraAngle.includes("Back") ||
-        s.cameraAngle.includes("背后") ||
-        s.cameraAngle.includes("过肩"));
+    const lensText = isECU ? "100mm Macro Lens, extremely shallow depth, detailed surface" : s.lensSize;
 
-    const char =
-      [s.age, s.ethnicity, s.gender].filter(Boolean).join(" ") ||
-      narrative.subject ||
-      "subject";
+
+
+    const isReverse = s.cameraAngle && (s.cameraAngle.includes("Back") || s.cameraAngle.includes("背后") || s.cameraAngle.includes("过肩"));
+
+    const char = [s.age, s.ethnicity, s.gender].filter(Boolean).join(" ") || narrative.subject || "subject";
 
     let bodyLogic = char;
-    if (isReverse) {
-      bodyLogic = `View from behind of ${char}, ${
-        narrative.backDetail || "back profile"
-      }, facing ${narrative.facingObject || "scenery"}`;
-    }
 
-    const isFilm =
-      s.camera && (s.camera.includes("Film") || s.camera.includes("Millennium"));
-    const resText = isFilm
-      ? "analog grainy texture, film grain"
-      : "8k resolution, ultra-detailed digital sensor";
+    if (isReverse) { bodyLogic = `View from behind of ${char}, ${narrative.backDetail || "back profile"}, facing ${narrative.facingObject || "scenery"}`; }
 
-    const parts = [
-      s.shotType,
-      s.cameraAngle,
-      bodyLogic,
-      s.frameSize,
-      s.mediaType,
-      Array.isArray(s.genre) ? s.genre.join(", ") : "",
-      tags.join(", "),
-      s.location ? `in ${s.location}` : "",
-      s.weather,
-      s.timeOfDay,
-      s.lighting,
-      s.lightingType,
-      Array.isArray(s.color) ? s.color.join(", ") : ""
-    ].filter(Boolean);
+    
 
-    const techArray = [
-      s.camera,
-      s.format,
-      lensText,
-      s.aperture,
-      s.aspectRatio
-    ].filter(Boolean);
-    const tech = techArray.join(", ");
+    const isFilm = s.camera && (s.camera.includes("Film") || s.camera.includes("Millennium"));
 
-    const arParam = s.aspectRatio ? s.aspectRatio.split(":")[0] : "16:9";
+    const resText = isFilm ? "analog grainy texture, film grain" : "8k resolution, ultra-detailed digital sensor";
 
-    // --- MJ 风格 ---
-    const mjPrompt = `/imagine prompt: ${parts.join(
-      ", "
-    )}. --ar ${arParam} --params ${tech}, ${resText}`;
 
-    // --- Nano Banana 生图风格 ---
-    // 不使用 /imagine，不带 --ar，更偏自然语言，强调静态画面
-    const nanoParts = parts.concat([
-      tech,
-      resText,
-      "highly detailed still image",
-      "cinematic composition",
-      "sharp focus",
-      "no motion blur",
-      "single frame, photographic still"
-    ]).filter(Boolean);
 
-    const nanoPrompt = nanoParts.join(", ");
+    const parts = [s.shotType, s.cameraAngle, bodyLogic, s.frameSize, s.mediaType, Array.isArray(s.genre)?s.genre.join(", "):"", tags.join(", "), s.location ? `in ${s.location}` : "", s.weather, s.timeOfDay, s.lightingStyle, s.color.join(", ")].filter(Boolean);
 
-    // 根据当前 tab 设置提示词
-    setPrompt(promptMode === "mj" ? mjPrompt : nanoPrompt);
-  }, [selections, tags, narrative, promptMode]);
+    const tech = [s.camera, s.format, lensText, s.aperture, s.aspectRatio].filter(Boolean).join(", ");
+
+    const arParam = s.aspectRatio ? s.aspectRatio.split(':')[0] : "16:9";
+
+    
+
+    setPrompt(`/imagine prompt: ${parts.join(", ")}. --ar ${arParam} --params ${tech}, ${resText}`);
+
+  }, [selections, tags, narrative]);
 
 
 
   return (
 
     <div className="h-screen w-screen flex flex-col overflow-hidden font-sans antialiased bg-[#050505] text-neutral-200">
-      <Toast
-        show={toastVisible}
-        leaving={toastLeaving}
-        message="提示词已复制!"
-      />
 
       <header className="h-12 shrink-0 px-4 flex justify-between items-center z-50 border-b border-white/5 bg-black/80 backdrop-blur-md">
 
@@ -612,10 +524,9 @@ export default function DirectorsMind() {
 
 
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
-        <aside className="w-[400px] shrink-0 flex flex-col overflow-y-auto custom-scrollbar bg-[#09090b] border-r border-white/5">
-
+<aside className="w-full md:w-[400px] shrink-0 flex flex-col overflow-y-auto custom-scrollbar bg-[#09090b] border-r border-white/5 max-h-[60vh] md:max-h-none">
           
 
           <div className="p-5 flex flex-col gap-4">
@@ -788,12 +699,10 @@ export default function DirectorsMind() {
 
 
 
-        <main className="flex-1 flex flex-col relative">
-
+<main className="flex-1 flex flex-col relative min-h-[40vh] md:min-h-0">
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-[#050505] to-[#1a1a1a]"></div>
 
-          <div className="flex-1 flex items-center justify-center p-6 z-10 overflow-hidden relative">
-
+<div className="hidden md:flex flex-1 items-center justify-center p-6 z-10 overflow-hidden relative">
              <div className="flex flex-col items-center gap-4 opacity-20 text-white">
 
                 <div className="w-16 h-16 rounded-2xl border-2 border-dashed border-current flex items-center justify-center"><ImageIcon size={32} strokeWidth={1} /></div>
@@ -808,61 +717,17 @@ export default function DirectorsMind() {
 
             <div className="w-full max-w-4xl rounded-xl border border-white/10 bg-[#111]/80 backdrop-blur-xl shadow-2xl flex flex-col overflow-hidden">
 
-<div className="px-4 py-3 border-b border-white/5 bg-black/20 flex justify-between items-center">
-  <div className="flex items-center gap-2">
-    <Terminal size={12} className="text-blue-500" />
-    <span className="text-[10px] font-bold uppercase tracking-wider opacity-50">
-      {t.promptTerminal}
-    </span>
-  </div>
+              <div className="px-4 py-3 border-b border-white/5 bg-black/20 flex justify-between items-center">
 
-  <div className="flex items-center gap-3">
-    {/* 新增：提示词风格切换 Tab */}
-    <div className="flex bg-[#111111] rounded-md p-0.5 border border-white/10">
-      <button
-        type="button"
-        onClick={() => setPromptMode("mj")}
-        className={
-          "px-2.5 py-1 text-[10px] font-bold rounded-sm transition-all " +
-          (promptMode === "mj"
-            ? "bg-white text-black"
-            : "text-neutral-400 hover:text-neutral-200")
-        }
-      >
-        Midjourney
-      </button>
-      <button
-        type="button"
-        onClick={() => setPromptMode("nano")}
-        className={
-          "px-2.5 py-1 text-[10px] font-bold rounded-sm transition-all " +
-          (promptMode === "nano"
-            ? "bg-blue-600 text-white"
-            : "text-neutral-400 hover:text-neutral-200")
-        }
-      >
-        Nano Banana Pro
-      </button>
-    </div>
+                <div className="flex items-center gap-2"><Terminal size={12} className="text-blue-500" /><span className="text-[10px] font-bold uppercase tracking-wider opacity-50">{t.promptTerminal}</span></div>
 
-    {/* 原有复制按钮 */}
-<button
-  onClick={triggerCopyToast}
-  className="opacity-50 hover:opacity-100 transition"
->
-  <Copy size={12} />
-</button>
-  </div>
-</div>
+                <button onClick={() => { navigator.clipboard.writeText(prompt); alert("提示词已复制!"); }} className="opacity-50 hover:opacity-100 transition"><Copy size={12}/></button>
+
+              </div>
 
               <div className="p-4 font-mono text-xs leading-relaxed opacity-80 h-[80px] overflow-y-auto custom-scrollbar select-all bg-[#0a0a0a]">{prompt}</div>
 
-              <button
-  onClick={triggerCopyToast}
-  className="h-10 w-full flex items-center justify-center gap-2 font-bold text-sm bg-white text-black hover:bg-gray-200 transition-all"
->
-  <Copy size={16} /> {UI_LABELS.copyPrompt}
-</button>
+              <button onClick={() => { navigator.clipboard.writeText(prompt); alert("提示词已复制!"); }} className="h-10 w-full flex items-center justify-center gap-2 font-bold text-sm bg-white text-black hover:bg-gray-200 transition-all"><Copy size={16}/> {UI_LABELS.copyPrompt}</button>
 
             </div>
 
@@ -871,18 +736,6 @@ export default function DirectorsMind() {
         </main>
 
       </div>
-      <style>{`
-  @keyframes toast-in-anim {
-    from { opacity: 0; transform: translateY(12px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  @keyframes toast-out-anim {
-    from { opacity: 1; transform: translateY(0) scale(1); }
-    to { opacity: 0; transform: translateY(-8px) scale(0.95); }
-  }
-  .toast-in { animation: toast-in-anim 0.3s ease-out forwards; }
-  .toast-out { animation: toast-out-anim 0.3s ease-in forwards; }
-`}</style>
 
     </div>
 
